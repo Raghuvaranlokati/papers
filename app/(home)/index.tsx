@@ -8,7 +8,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ImageBackground 
-        source={require('@/assets/fonts/exam-bg.png')} // Make sure to update the path based on your project structure
+        source={require('../../assets/images/exambg.png')} // Make sure to update the path based on your project structure
         style={styles.backgroundImage}
         resizeMode="cover"
       >
@@ -25,7 +25,7 @@ export default function HomeScreen() {
             </Link>
           </View>
           <View style={styles.row}>
-            <Link href="/mocktests" style={styles.card}>
+            <Link href="/mocktest" style={styles.card}>
               <Ionicons name="checkmark-done-outline" size={32} color="black" /> {/* Icon for Mock Tests */}
               <Text style={styles.cardTitle}>Mock Tests</Text>
             </Link>

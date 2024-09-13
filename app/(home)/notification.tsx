@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet, Button, Platform } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Button, Platform, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
@@ -15,6 +15,7 @@ Notifications.setNotificationHandler({
 
 const NotificationScreen = () => {
   const [notifications, setNotifications] = useState<Notifications.Notification[]>([]); // To store notifications
+  const [displayLimit, setDisplayLimit] = useState(10); // To control pagination
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
 
@@ -22,14 +23,15 @@ const NotificationScreen = () => {
     // Load stored notifications from AsyncStorage on app start
     loadStoredNotifications();
 
-    registerForPushNotificationsAsync().then(token => console.log("Expo Push Token: ", token));
+    registerForPushNotificationsAsync().then(token => console.log('Expo Push Token:', token));
 
     // Listener for notifications when app is in foreground
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      // Add the new notification to the list and save it to AsyncStorage
-      const updatedNotifications = [...notifications, notification];
-      setNotifications(updatedNotifications);
-      storeNotifications(updatedNotifications); // Store updated notifications list
+      setNotifications(prevNotifications => {
+        const updatedNotifications = [...prevNotifications, notification];
+        debounceStoreNotifications(updatedNotifications);
+        return updatedNotifications;
+      });
     });
 
     // Listener for notification responses when the notification is interacted with
@@ -46,7 +48,7 @@ const NotificationScreen = () => {
         Notifications.removeNotificationSubscription(responseListener.current);
       }
     };
-  }, [notifications]); // Re-run the effect when notifications change
+  }, []);
 
   // Load notifications from AsyncStorage
   const loadStoredNotifications = async () => {
@@ -58,6 +60,15 @@ const NotificationScreen = () => {
     } catch (error) {
       console.error('Failed to load notifications from storage', error);
     }
+  };
+
+  // Debounce storage function to avoid frequent writes to AsyncStorage
+  let timeoutId: NodeJS.Timeout;
+  const debounceStoreNotifications = (notificationsToStore: Notifications.Notification[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      storeNotifications(notificationsToStore);
+    }, 500);
   };
 
   // Store notifications to AsyncStorage
@@ -83,16 +94,22 @@ const NotificationScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Notifications</Text>
       {notifications.length > 0 ? (
-        <FlatList
-          data={notifications}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.notificationItem}>
-              <Text style={styles.notificationTitle}>Title: {item.request.content.title}</Text>
-              <Text style={styles.notificationBody}>Body: {item.request.content.body}</Text>
-            </View>
+        <>
+          <FlatList
+            data={notifications.slice(-displayLimit)} // Paginate by slicing notifications
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.notificationItem}>
+                <Text style={styles.notificationTitle}>Title: {item.request.content.title}</Text>
+                <Text style={styles.notificationBody}>Body: {item.request.content.body}</Text>
+              </View>
+            )}
+          />
+          {/* Show more button for pagination */}
+          {notifications.length > displayLimit && (
+            <Button title="Show More" onPress={() => setDisplayLimit(displayLimit + 10)} />
           )}
-        />
+        </>
       ) : (
         <Text>No notifications yet.</Text>
       )}
@@ -153,14 +170,14 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
     }
 
     if (finalStatus !== 'granted') {
-      alert('Failed to get push token for push notification!');
+      Alert.alert('Failed to get push token for push notification!');
       return;
     }
 
     token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log('Expo Push Token: ', token);
+    console.log('Expo Push Token:', token);
   } else {
-    alert('Must use a physical device for Push Notifications');
+    Alert.alert('Must use a physical device for Push Notifications');
   }
 
   return token;

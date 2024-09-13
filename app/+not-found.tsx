@@ -1,52 +1,26 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 
-export default function PreparingTestsScreen() {
-  const bounceAnim1 = useRef(new Animated.Value(0)).current;
-  const bounceAnim2 = useRef(new Animated.Value(0)).current;
-  const bounceAnim3 = useRef(new Animated.Value(0)).current;
+export default function NotFoundScreen() {
+  const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    startBouncing();
+    startFloating();
   }, []);
 
-  const startBouncing = () => {
+  const startFloating = () => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(bounceAnim1, {
+        Animated.timing(floatAnim, {
           toValue: -10,
-          duration: 300,
-          easing: Easing.linear,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-        Animated.timing(bounceAnim1, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bounceAnim2, {
-          toValue: -10,
-          duration: 300,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bounceAnim2, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bounceAnim3, {
-          toValue: -10,
-          duration: 300,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bounceAnim3, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.linear,
+        Animated.timing(floatAnim, {
+          toValue: 10,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
       ])
@@ -55,12 +29,11 @@ export default function PreparingTestsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Tests are preparing soon...</Text>
-      <View style={styles.dotContainer}>
-        <Animated.View style={[styles.dot, { transform: [{ translateY: bounceAnim1 }] }]} />
-        <Animated.View style={[styles.dot, { transform: [{ translateY: bounceAnim2 }] }]} />
-        <Animated.View style={[styles.dot, { transform: [{ translateY: bounceAnim3 }] }]} />
-      </View>
+      <Text style={styles.title}>404</Text>
+      <Text style={styles.message}>Oops! Page Not Found</Text>
+      <Animated.View style={[styles.floatingBox, { transform: [{ translateY: floatAnim }] }]}>
+        <Text style={styles.boxText}>🚀</Text>
+      </Animated.View>
     </View>
   );
 }
@@ -70,24 +43,33 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f8f8f8',
   },
-  text: {
-    fontSize: 24,
+  title: {
+    fontSize: 80,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 30,
+    marginBottom: 20,
   },
-  dotContainer: {
-    flexDirection: 'row',
+  message: {
+    fontSize: 20,
+    color: '#666',
+    marginBottom: 50,
+  },
+  floatingBox: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#ffcc00',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  dot: {
-    width: 15,
-    height: 15,
-    borderRadius: 7.5,
-    backgroundColor: '#333',
-    marginHorizontal: 5,
+  boxText: {
+    fontSize: 40,
   },
 });
